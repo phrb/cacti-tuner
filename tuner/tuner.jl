@@ -74,6 +74,7 @@ import StochasticSearch
 
         write(file, text)
         close(file)
+
         return filename
     end
 
@@ -82,7 +83,7 @@ import StochasticSearch
             filename = generate_cacti_config(x, "..")
             cd("../cacti_hp/")
 
-            println(cmd)
+            cmd = `./cacti -infile $filename`
             output = readlines(cmd)
 
             cd("../tuner/")
