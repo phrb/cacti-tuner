@@ -217,13 +217,13 @@ result = take!(tuning_run.channel)
 println("Starting tuning run...")
 
 println("$(result.current_time) $(result.cost_minimum)")
-write(results_file, "$(result.current_time) $(result.cost_minimum)")
+write(results_file, "$(result.current_time) $(result.cost_minimum)\n")
 
 while !result.is_final
     result = take!(tuning_run.channel)
 
     println("$(result.current_time) $(result.cost_minimum)")
-    write(results_file, "$(result.current_time) $(result.cost_minimum)")
+    write(results_file, "$(result.current_time) $(result.cost_minimum)\n")
 end
 
 println("Done.")
