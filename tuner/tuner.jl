@@ -1,3 +1,5 @@
+addprocs()
+
 import StochasticSearch
 
 @everywhere begin
@@ -81,15 +83,10 @@ import StochasticSearch
     function run_cacti(x::Configuration, parameters::Dict{Symbol, Any})
         try
             filename = generate_cacti_config(x, "..")
-            cd("../cacti_hp/")
 
-            cmd = `./cacti -infile $filename`
-            output = readlines(cmd)
-
-            cd("../tuner/")
-
-            rm(filename)
-            return parse(Float64, split(output[3], " Area: ")[2])
+            cmd    = `./run_cacti.sh $filename`
+            output = readstring(cmd)
+            return parse(Float64, output)
         catch
             rm(filename)
             return Inf
@@ -202,7 +199,7 @@ tuning_run = Run(cost                = run_cacti,
                                         [:randomized_first_improvement 2];
                                         [:iterative_probabilistic_improvement 2];])
 
-results_path = "./results/target_area_1800/1"
+results_path = "./results/target_area_1800/2"
 results_log  = "$results_path/best_over_time.log"
 
 try
