@@ -207,11 +207,11 @@ results_log  = "$results_path/best_over_time.log"
 
 try
     mkpath(results_path)
-    open(results_log, "w")
 catch
-    println("This is a repeated run.")
-    exit()
+    println("The directory $results_path already existed.")
 end
+
+open(results_log, "w+")
 
 @spawn optimize(tuning_run)
 
@@ -219,13 +219,13 @@ result = take!(tuning_run.channel)
 
 println("Starting tuning run...")
 
-print(result.current_time, result.cost_minimum)
+println(results_log, "$(result.current_time) $(result.cost_minimum)")
 write(results_log, "$(result.current_time) $(result.cost_minimum)")
 
 while !result.is_final
     result = take!(tuning_run.channel)
 
-    println(result.current_time, result.cost_minimum)
+    println(results_log, "$(result.current_time) $(result.cost_minimum)")
     write(results_log, "$(result.current_time) $(result.cost_minimum)")
 end
 
