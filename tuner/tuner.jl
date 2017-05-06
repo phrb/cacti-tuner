@@ -193,22 +193,40 @@ configuration = Configuration([IntegerParameter(64, 1073741824, 4194304, "size")
 tuning_run = Run(cost                = run_cacti,
                  starting_point      = configuration,
                  stopping_criterion  = elapsed_time_criterion,
-                 report_after        = 5,
+                 report_after        = 30,
                  reporting_criterion = elapsed_time_reporting_criterion,
-                 duration            = 180,
-                 methods             = [[:simulated_annealing 1];
-                                        [:iterative_first_improvement 1];
-                                        [:iterated_local_search 1];
-                                        [:randomized_first_improvement 1];
-                                        [:iterative_greedy_construction 1];
-                                        [:iterative_probabilistic_improvement 1];])
+                 duration            = 1800,
+                 methods             = [[:simulated_annealing 2];
+                                        [:iterative_first_improvement 2];
+                                        [:iterated_local_search 2];
+                                        [:randomized_first_improvement 2];
+                                        [:iterative_probabilistic_improvement 2];])
+
+results_path = "./results/target_area_1800/1"
+results_log  = "$results_path/best_over_time.log"
+
+try
+    mkpath(results_path)
+    open(results_log, "w")
+catch
+    println("This is a repeated run.")
+    exit()
+end
 
 @spawn optimize(tuning_run)
 
 result = take!(tuning_run.channel)
 
-print(result)
+println("Starting tuning run...")
+
+print(result.current_time, result.cost_minimum)
+write(results_log, "$(result.current_time) $(result.cost_minimum)")
+
 while !result.is_final
     result = take!(tuning_run.channel)
-    println(result.cost_minimum)
+
+    println(result.current_time, result.cost_minimum)
+    write(results_log, "$(result.current_time) $(result.cost_minimum)")
 end
+
+println("Done.")
