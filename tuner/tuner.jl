@@ -211,7 +211,7 @@ catch
     println("The directory $results_path already existed.")
 end
 
-open(results_log, "w+")
+results_file = open(results_log, "w+")
 
 @spawn optimize(tuning_run)
 
@@ -219,14 +219,14 @@ result = take!(tuning_run.channel)
 
 println("Starting tuning run...")
 
-println(results_log, "$(result.current_time) $(result.cost_minimum)")
-write(results_log, "$(result.current_time) $(result.cost_minimum)")
+println("$(result.current_time) $(result.cost_minimum)")
+write(results_file, "$(result.current_time) $(result.cost_minimum)")
 
 while !result.is_final
     result = take!(tuning_run.channel)
 
-    println(results_log, "$(result.current_time) $(result.cost_minimum)")
-    write(results_log, "$(result.current_time) $(result.cost_minimum)")
+    println("$(result.current_time) $(result.cost_minimum)")
+    write(results_file, "$(result.current_time) $(result.cost_minimum)")
 end
 
 println("Done.")
