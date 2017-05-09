@@ -9,6 +9,6 @@ duration=10
 
 for memtype in $memtypes; do
     for i in $(seq 1 $runs); do
-        julia tuner.jl --path $path/$memtype/$i --mem_type $memtype --duration $duration
+        ~/julia/julia tuner.jl --path $path/$memtype/$i --mem_type $memtype --duration $duration
     done
 done
