@@ -30,7 +30,7 @@ import StochasticSearch
         text = string(text, "-Tag array peripheral type - \"$(c["ta peri type"].current.value)\"\n")
         text = string(text, "-input/output bus width $(2 ^ c["io bus"].value)\n")
         text = string(text, "-operating temperature (K) $(10 * c["temp"].value)\n")
-        text = string(text, "-cache type \"$(c["cache type"].current.value)\"\n")
+        text = string(text, "-cache type \"$(c["cache type"].value)\"\n")
 
         if c["tag size"].value == 0
             text = string(text, "-tag size (b) \"default\"\n")
@@ -84,6 +84,8 @@ import StochasticSearch
         try
             filename = generate_cacti_config(x, "..")
 
+            exit()
+
             cmd    = `./run_cacti.sh $filename`
             output = readstring(cmd)
             return parse(Float64, output)
@@ -93,6 +95,39 @@ import StochasticSearch
         end
     end
 end
+
+results_path = ""
+memory_type  = ""
+duration     = 0
+
+if ARGS[1] == "--path"
+    results_path = ARGS[2]
+else
+    exit()
+end
+
+if ARGS[3] == "--mem_type"
+    memory_type = ARGS[4]
+else
+    exit()
+end
+
+if ARGS[5] == "--duration"
+    duration = parse(Int, ARGS[6])
+else
+    exit()
+end
+
+results_log  = "$results_path/best_over_time.log"
+
+try
+    mkpath(results_path)
+catch
+    println("The directory $results_path already existed.")
+end
+
+results_file = open(results_log, "w+")
+
 
 configuration = Configuration([IntegerParameter(64, 1073741824, 4194304, "size"),
                                IntegerParameter(0, 4, 0, "associativity"),
@@ -128,10 +163,7 @@ configuration = Configuration([IntegerParameter(64, 1073741824, 4194304, "size")
                                               1, "ta peri type"),
                                IntegerParameter(0, 12, 8, "io bus"),
                                IntegerParameter(30, 40, 35, "temp"),
-                               EnumParameter([StringParameter("ram", "name"),
-                                              StringParameter("cache", "name"),
-                                              StringParameter("main-memory", "name")],
-                                              1, "cache type"),
+                               StringParameter(memory_type, "cache type"),
                                IntegerParameter(0, 45, 0, "tag size"),
                                EnumParameter([StringParameter("normal", "name"),
                                               StringParameter("sequential", "name"),
@@ -192,23 +224,12 @@ tuning_run = Run(cost                = run_cacti,
                  stopping_criterion  = elapsed_time_criterion,
                  report_after        = 30,
                  reporting_criterion = elapsed_time_reporting_criterion,
-                 duration            = 1800,
+                 duration            = duration,
                  methods             = [[:simulated_annealing 2];
                                         [:iterative_first_improvement 2];
                                         [:iterated_local_search 2];
                                         [:randomized_first_improvement 2];
                                         [:iterative_probabilistic_improvement 2];])
-
-results_path = "./results/target_area_1800/2"
-results_log  = "$results_path/best_over_time.log"
-
-try
-    mkpath(results_path)
-catch
-    println("The directory $results_path already existed.")
-end
-
-results_file = open(results_log, "w+")
 
 @spawn optimize(tuning_run)
 
