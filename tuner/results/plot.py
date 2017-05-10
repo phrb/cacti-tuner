@@ -19,9 +19,35 @@ def config_matplotlib():
     plt.rc('font', family = 'serif')
 
     font = {'family' : 'serif',
-            'size'   : 20}
+            'size'   : 38}
 
     mpl.rc('font', **font)
+
+def generate_line_plot(x_data,
+                       y_data,
+                       filename,
+                       plot_title,
+                       xlabel,
+                       ylabel,
+                       ymax,
+                       ymin):
+
+    fig     = plt.figure(1, figsize=(18, 10))
+    ax      = fig.add_subplot(111)
+
+    ax.plot(x_data, y_data, '-o')
+
+    ax.set_title(plot_title)
+    ax.set_xlabel(xlabel)
+
+    ax.set_ylabel(ylabel)
+
+    ax.set_ylim([ymin - 0.0005, ymax + 0.0005])
+    plt.tight_layout()
+
+    fig.savefig("{0}.eps".format(filename), format = 'eps', dpi = 2000, bbox_inches = 'tight')
+
+    plt.clf()
 
 def generate_boxplot(data,
                      labels,
@@ -31,7 +57,8 @@ def generate_boxplot(data,
                      ylabel,
                      ymax,
                      ymin,
-                     index_range):
+                     index_range,
+                     label_rot = '45'):
 
     indexes = np.arange(index_range)
     fig     = plt.figure(1, figsize=(18, 10))
@@ -42,15 +69,15 @@ def generate_boxplot(data,
 
     ax.set_title(plot_title)
     ax.set_xlabel(xlabel)
-    #ax.set_xticks(indexes + (.5 * width))
+
     ax.set_ylabel(ylabel)
-    ax.set_xticklabels(labels, rotation = '45')
+    ax.set_xticklabels(labels, rotation = label_rot)
     ax.axhline(y = 1, color="r")
 
     ax.set_ylim([ymin - 0.07, ymax + 0.07])
     plt.tight_layout()
 
-    fig.savefig("{0}.eps".format(filename), format = 'eps', dpi = 2000)
+    fig.savefig("{0}.eps".format(filename), format = 'eps', dpi = 2000, bbox_inches = 'tight')
 
     plt.clf()
 
@@ -59,8 +86,9 @@ def run_cacti_config(filepath, target_path):
                    shell = True,
                    check = True)
 
-def load_data(run_names, target_file, runs):
+def load_data(run_names, target_file, runs, best_ids):
     data = []
+    partial_data = []
 
     default_file = open("{0}/default_cache_output.log".format(run_names[0].split("/")[0]))
     default_data = default_file.readlines()
@@ -70,6 +98,8 @@ def load_data(run_names, target_file, runs):
     default_min_power_value = float(default_data[1].split("  power : ( ")[1].split(",")[0])
     default_max_power_value = float(default_data[1].split("  power : ( ")[1].split(",")[1].split(")")[0])
     default_area_value = float(default_data[2].split("  Area: ")[1])
+
+    run_id = 0
 
     for name in run_names:
         area_data        = []
@@ -101,10 +131,39 @@ def load_data(run_names, target_file, runs):
             max_power_data.append(new_max_power_value)
             access_time_data.append(new_access_time_value)
 
+            if run == best_ids[run_id]:
+                generate_line_plot([float(d.split()[0]) for d in run_data],
+                                   [float(d.split()[1]) for d in run_data],
+                                   "target_area_900_{0}_best".format(name.split("/")[1]),
+                                   "Best Tuned ``{0}\'\'CACTI Area during 15 minutes of Tuning".format(name.split("/")[1]),
+                                   "Time (s)",
+                                   "Area",
+                                   max([float(d.split()[1]) for d in run_data]),
+                                   min([float(d.split()[1]) for d in run_data]))
+
         data.append(("{0}-area".format(name), area_data))
         data.append(("{0}-min-p".format(name), min_power_data))
         data.append(("{0}-max-p".format(name), max_power_data))
         data.append(("{0}-acc-t".format(name), access_time_data))
+
+        partial_data.append(("area", area_data))
+        partial_data.append(("min-p", min_power_data))
+        partial_data.append(("max-p", max_power_data))
+        partial_data.append(("acc-t", access_time_data))
+
+        generate_boxplot([d[1] for d in partial_data],
+                         [d[0] for d in partial_data],
+                         "target_area_900_{0}".format(name.split("/")[1]),
+                         "Relative ``{0}\'\' CACTI Metrics after 15 minutes of Tuning, 8 Runs".format(name.split("/")[1]),
+                         "Target CACTI ``cache type\'\'",
+                         "Value Relative to Starting Point",
+                         max([max(d[1]) for d in partial_data]),
+                         min([min(d[1]) for d in partial_data]),
+                         len(run_names),
+                         label_rot = '0')
+
+        partial_data = []
+        run_id += 1
 
     ymax = max([max(d[1]) for d in data])
     ymin = min([min(d[1]) for d in data])
@@ -118,10 +177,12 @@ if __name__ == '__main__':
                  "target_area_900/cache",
                  "target_area_900/main-memory"]
 
+    best_run_ids = [1, 7, 1]
+
     target_file = "best_over_time.log"
     runs = 8
 
-    data, ymax, ymin = load_data(run_names, target_file, runs)
+    data, ymax, ymin = load_data(run_names, target_file, runs, best_run_ids)
 
     generate_boxplot([d[1] for d in data],
                      [d[0].split("/")[1] for d in data],
