@@ -2,6 +2,8 @@
 
 import re
 import os
+import os.path
+import subprocess
 import matplotlib as mpl
 
 import math
@@ -17,7 +19,7 @@ def config_matplotlib():
     plt.rc('font', family = 'serif')
 
     font = {'family' : 'serif',
-            'size'   : 28}
+            'size'   : 20}
 
     mpl.rc('font', **font)
 
@@ -42,38 +44,70 @@ def generate_boxplot(data,
     ax.set_xlabel(xlabel)
     #ax.set_xticks(indexes + (.5 * width))
     ax.set_ylabel(ylabel)
-    #ax.set_xticklabels(labels, rotation = '0')
+    ax.set_xticklabels(labels, rotation = '45')
+    ax.axhline(y = 1, color="r")
 
-    ax.set_ylim([ymin - 0.01, ymax + 0.01])
+    ax.set_ylim([ymin - 0.07, ymax + 0.07])
     plt.tight_layout()
 
     fig.savefig("{0}.eps".format(filename), format = 'eps', dpi = 2000)
 
     plt.clf()
 
+def run_cacti_config(filepath, target_path):
+    subprocess.run("../../cacti_hp/cacti -infile {0} > {1}".format(filepath, target_path),
+                   shell = True,
+                   check = True)
+
 def load_data(run_names, target_file, runs):
     data = []
-    ymax = -1
-    ymin = float('Inf')
+
+    default_file = open("{0}/default_cache_output.log".format(run_names[0].split("/")[0]))
+    default_data = default_file.readlines()
+    default_file.close()
+
+    default_access_time_value = float(default_data[0].split("  Access time (ns): ")[1])
+    default_min_power_value = float(default_data[1].split("  power : ( ")[1].split(",")[0])
+    default_max_power_value = float(default_data[1].split("  power : ( ")[1].split(",")[1].split(")")[0])
+    default_area_value = float(default_data[2].split("  Area: ")[1])
 
     for name in run_names:
-        name_data = []
+        area_data        = []
+        min_power_data   = []
+        max_power_data   = []
+        access_time_data = []
 
         for run in range(1, runs + 1):
             file      = open("{0}/{1}/{2}".format(name, run, target_file))
             run_data  = file.readlines()
-            new_value = float(run_data[-1].split()[1]) / float(run_data[0].split()[1])
-
-            if new_value > ymax:
-                ymax = new_value
-
-            if new_value < ymin:
-                ymin = new_value
-
-            name_data.append(new_value)
             file.close()
 
-        data.append((name, name_data))
+            new_area_value = float(run_data[-1].split()[1]) / default_area_value
+
+            if not os.path.isfile("{0}/{1}/config_output.log".format(name, run)):
+                run_cacti_config("{0}/{1}/final_tuned.cfg".format(name, run),
+                                 "{0}/{1}/config_output.log".format(name, run))
+
+            tuned_file   = open("{0}/{1}/config_output.log".format(name, run))
+            tuned_data = tuned_file.readlines()
+            tuned_file.close()
+
+            new_access_time_value = float(tuned_data[0].split("  Access time (ns): ")[1]) / default_access_time_value
+            new_min_power_value = float(tuned_data[1].split("  power : ( ")[1].split(",")[0]) / default_min_power_value
+            new_max_power_value = float(tuned_data[1].split("  power : ( ")[1].split(",")[1].split(")")[0]) / default_max_power_value
+
+            area_data.append(new_area_value)
+            min_power_data.append(new_min_power_value)
+            max_power_data.append(new_max_power_value)
+            access_time_data.append(new_access_time_value)
+
+        data.append(("{0}-area".format(name), area_data))
+        data.append(("{0}-min-p".format(name), min_power_data))
+        data.append(("{0}-max-p".format(name), max_power_data))
+        data.append(("{0}-acc-t".format(name), access_time_data))
+
+    ymax = max([max(d[1]) for d in data])
+    ymin = min([min(d[1]) for d in data])
 
     return data, ymax, ymin
 
@@ -88,12 +122,11 @@ if __name__ == '__main__':
     runs = 8
 
     data, ymax, ymin = load_data(run_names, target_file, runs)
-    print(data, ymax, ymin)
 
     generate_boxplot([d[1] for d in data],
                      [d[0].split("/")[1] for d in data],
                      "target_area_900",
-                     "Relative CACTI Area after 15 minutes of Tuning, 8 Runs",
+                     "Relative CACTI Metrics after 15 minutes of Tuning, 8 Runs",
                      "Target CACTI ``cache type\'\'",
                      "Value Relative to Starting Point",
                      ymax,
