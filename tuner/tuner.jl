@@ -35,7 +35,7 @@ import StochasticSearch
         text = string(text, "-Data array peripheral type - \"$(c["da peri type"].current.value)\"\n")
         text = string(text, "-Tag array cell type - \"$(c["ta cell type"].current.value)\"\n")
         text = string(text, "-Tag array peripheral type - \"$(c["ta peri type"].current.value)\"\n")
-        text = string(text, "-input/output bus width $(2 ^ c["io bus"].value)\n")
+        text = string(text, "-output/input bus width $(2 ^ c["io bus"].value)\n")
         text = string(text, "-operating temperature (K) $(10 * c["temp"].value)\n")
         text = string(text, "-cache type \"$(c["cache type"].value)\"\n")
 
@@ -45,7 +45,7 @@ import StochasticSearch
             text = string(text, "-tag size (b) $(c["tag size"].value)\n")
         end
 
-        text = string(text, "-access mode \"$(c["access mode"].current.value)\"\n")
+        text = string(text, "-access mode - \"$(c["access mode"].current.value)\"\n")
 
         text = string(text, "-design objective $(c["delay obj"].value):")
         text = string(text, "$(c["dynamic power obj"].value):")
@@ -72,7 +72,7 @@ import StochasticSearch
         text = string(text, "$(c["nuca area dev"].value)\n")
 
         text = string(text, "-Optimize \"$(c["optimize"].current.value)\"\n")
-        text = string(text, "-Cache model \"$(c["cache model"].current.value)\"\n")
+        text = string(text, "-Cache model - \"$(c["cache model"].current.value)\"\n")
         text = string(text, "-NUCA bank count $(c["nuca bank count"].value)\n")
         text = string(text, "-Wire signalling - \"$(c["wire signalling"].current.value)\"\n")
         text = string(text, "-Wire inside mat - \"$(c["wire inside"].current.value)\"\n")
