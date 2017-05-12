@@ -2,7 +2,7 @@
 
 set xtrace -o
 
-path="./results/target_area_900"
+path="./results/target_acct_900"
 runs=8
 duration=900
 

@@ -1,14 +1,14 @@
 #! /bin/bash
 
 cd ../cacti_hp > /dev/null
-AREA=$(./cacti -infile $1 | grep ' Area: ' | awk 'BEGIN { FS = " Area: " } ; { print $2 }')
+ACCT=$(./cacti -infile $1 | grep '  Access time (ns): ' | xargs python -c 'import sys; print(sys.argv[4])')
 rm $1
 cd ../tuner/ > /dev/null
 
-if [[ -z $AREA ]]; then
+if [[ -z $ACCT ]]; then
     echo 'ERROR'
 else
-    echo $AREA
+    echo $ACCT
 fi
 
 exit 0

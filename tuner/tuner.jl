@@ -94,7 +94,6 @@ import StochasticSearch
             cmd    = `./run_cacti.sh $filename`
             output = readstring(cmd)
 
-            rm(filename)
             return parse(Float64, output)
         catch
             rm(filename)
@@ -237,11 +236,11 @@ tuning_run = Run(cost                = run_cacti,
                                         [:randomized_first_improvement 2];
                                         [:iterative_probabilistic_improvement 2];])
 
+println("Starting tuning run...")
+
 @spawn optimize(tuning_run)
 
 result = take!(tuning_run.channel)
-
-println("Starting tuning run...")
 
 println("$(result.current_time) $(result.cost_minimum)")
 write(results_file, "$(result.current_time) $(result.cost_minimum)\n")
