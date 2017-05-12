@@ -84,7 +84,7 @@ def generate_boxplot(data,
 def run_cacti_config(filepath, target_path):
     subprocess.run("../../cacti_hp/cacti -infile {0} > {1}".format(filepath, target_path),
                    shell = True,
-                   check = True)
+                   check = False)
 
 def load_data(run_names, target_file, runs, best_ids):
     data = []
@@ -112,8 +112,6 @@ def load_data(run_names, target_file, runs, best_ids):
             run_data  = file.readlines()
             file.close()
 
-            new_area_value = float(run_data[-1].split()[1]) / default_area_value
-
             if not os.path.isfile("{0}/{1}/config_output.log".format(name, run)):
                 run_cacti_config("{0}/{1}/final_tuned.cfg".format(name, run),
                                  "{0}/{1}/config_output.log".format(name, run))
@@ -125,6 +123,7 @@ def load_data(run_names, target_file, runs, best_ids):
             new_access_time_value = float(tuned_data[0].split("  Access time (ns): ")[1]) / default_access_time_value
             new_min_power_value = float(tuned_data[1].split("  power : ( ")[1].split(",")[0]) / default_min_power_value
             new_max_power_value = float(tuned_data[1].split("  power : ( ")[1].split(",")[1].split(")")[0]) / default_max_power_value
+            new_area_value = float(tuned_data[2].split(" Area: ")[1]) / default_area_value
 
             area_data.append(new_area_value)
             min_power_data.append(new_min_power_value)
@@ -134,10 +133,10 @@ def load_data(run_names, target_file, runs, best_ids):
             if run == best_ids[run_id]:
                 generate_line_plot([float(d.split()[0]) for d in run_data],
                                    [float(d.split()[1]) for d in run_data],
-                                   "target_area_900_{0}_best".format(name.split("/")[1]),
-                                   "Best Tuned ``{0}\'\'CACTI Area during 15 minutes of Tuning".format(name.split("/")[1]),
+                                   "{0}_{1}_best".format(name.split("/")[0], name.split("/")[1]),
+                                   "Best Tuned ``{0}\'\'CACTI {1} during 15 minutes of Tuning".format(name.split("/")[1], name.split("/")[0].split("_")[1].title()),
                                    "Time (s)",
-                                   "Area",
+                                   name.split("/")[0].split("_")[1].title(),
                                    max([float(d.split()[1]) for d in run_data]),
                                    min([float(d.split()[1]) for d in run_data]))
 
@@ -153,7 +152,7 @@ def load_data(run_names, target_file, runs, best_ids):
 
         generate_boxplot([d[1] for d in partial_data],
                          [d[0] for d in partial_data],
-                         "target_area_900_{0}".format(name.split("/")[1]),
+                         "{0}_{1}".format(name.split("/")[0], name.split("/")[1]),
                          "Relative ``{0}\'\' CACTI Metrics after 15 minutes of Tuning, 8 Runs".format(name.split("/")[1]),
                          "Target CACTI ``cache type\'\'",
                          "Value Relative to Starting Point",
@@ -173,9 +172,11 @@ def load_data(run_names, target_file, runs, best_ids):
 if __name__ == '__main__':
     config_matplotlib()
 
-    run_names = ["target_area_900/ram",
-                 "target_area_900/cache",
-                 "target_area_900/main-memory"]
+    target_name = "target_acct_900"
+
+    run_names = ["{0}/ram".format(target_name),
+                 "{0}/cache".format(target_name),
+                 "{0}/main-memory".format(target_name)]
 
     best_run_ids = [1, 7, 1]
 
@@ -186,7 +187,7 @@ if __name__ == '__main__':
 
     generate_boxplot([d[1] for d in data],
                      [d[0].split("/")[1] for d in data],
-                     "target_area_900",
+                     "{0}".format(run_names[0].split("/")[0]),
                      "Relative CACTI Metrics after 15 minutes of Tuning, 8 Runs",
                      "Target CACTI ``cache type\'\'",
                      "Value Relative to Starting Point",
