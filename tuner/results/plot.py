@@ -172,7 +172,7 @@ def load_data(run_names, target_file, runs, best_ids):
 if __name__ == '__main__':
     config_matplotlib()
 
-    target_name = "target_acct_900"
+    target_name = "target_area_900_1"
 
     run_names = ["{0}/ram".format(target_name),
                  "{0}/cache".format(target_name),
