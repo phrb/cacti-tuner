@@ -1,14 +1,14 @@
 #! /bin/bash
 
 cd ../cacti_hp > /dev/null
-ACCT=$(./cacti -infile $1 | grep '  Access time (ns): ' | xargs python -c 'import sys; print(sys.argv[4])')
+VAL=$(./cacti -infile $1 | grep '  Area: ' | xargs python -c 'import sys; print(sys.argv[2])')
 rm $1
 cd ../tuner/ > /dev/null
 
-if [[ -z $ACCT ]]; then
+if [[ -z $VAL ]]; then
     echo 'ERROR'
 else
-    echo $ACCT
+    echo $VAL
 fi
 
 exit 0
