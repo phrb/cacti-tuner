@@ -1,6 +1,6 @@
 #! /bin/bash
 
-set xtrace -o
+set -o xtrace
 
 path="./results/target_area_900_1"
 runs=8
