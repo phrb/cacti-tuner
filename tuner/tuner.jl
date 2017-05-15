@@ -92,9 +92,12 @@ import StochasticSearch
             filename = generate_cacti_config(x, "..")
 
             cmd    = `./run_cacti.sh $filename`
-            output = readstring(cmd)
+            output = split(readstring(cmd), " ")
 
-            return parse(Float64, output)
+            area = parse(Float64, output[1])
+            acct = parse(Float64, output[2])
+
+            return area * acct
         catch
             rm(filename)
             return Inf
