@@ -86,7 +86,7 @@ def run_cacti_config(filepath, target_path):
                    shell = True,
                    check = False)
 
-def load_data(run_names, target_file, runs, best_ids):
+def load_data(run_names, target_file, runs, best_ids, line_metric_title, line_y_label):
     data = []
     partial_data = []
 
@@ -134,9 +134,9 @@ def load_data(run_names, target_file, runs, best_ids):
                 generate_line_plot([float(d.split()[0]) for d in run_data],
                                    [float(d.split()[1]) for d in run_data],
                                    "{0}_{1}_best".format(name.split("/")[0], name.split("/")[1]),
-                                   "Best Tuned ``{0}\'\'CACTI {1} during 15 minutes of Tuning".format(name.split("/")[1], name.split("/")[0].split("_")[1].title()),
+                                   "Best Tuned ``{0}\'\'CACTI {1} during 15 minutes of Tuning".format(name.split("/")[1], line_metric_title),
                                    "Time (s)",
-                                   name.split("/")[0].split("_")[1].title(),
+                                   line_y_label,
                                    max([float(d.split()[1]) for d in run_data]),
                                    min([float(d.split()[1]) for d in run_data]))
 
@@ -172,18 +172,21 @@ def load_data(run_names, target_file, runs, best_ids):
 if __name__ == '__main__':
     config_matplotlib()
 
-    target_name = "target_area_900_1"
+    target_name = "target_acct_900"
+
+    line_metric_title = "AccT"
+    line_y_label = "AccT"
 
     run_names = ["{0}/ram".format(target_name),
                  "{0}/cache".format(target_name),
                  "{0}/main-memory".format(target_name)]
 
-    best_run_ids = [1, 7, 1]
+    best_run_ids = [2, 2, 7]
 
     target_file = "best_over_time.log"
     runs = 8
 
-    data, ymax, ymin = load_data(run_names, target_file, runs, best_run_ids)
+    data, ymax, ymin = load_data(run_names, target_file, runs, best_run_ids, line_metric_title, line_y_label)
 
     generate_boxplot([d[1] for d in data],
                      [d[0].split("/")[1] for d in data],
